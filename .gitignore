@@ -1,0 +1,17 @@
+# backup
+*~
+*.swp
+[#]*[#]
+
+
+# ignore vim bundle directory
+.vim/bundle/
+.vim/sessions/
+
+# ignore emacs.d/* except emacs.d/elisp
+.emacs.d/*
+!.emacs.d/elisp
+#
+# ignore .eshell/* except .eshell/alias
+.eshell/*
+!.eshell/alias

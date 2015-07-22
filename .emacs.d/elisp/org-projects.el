@@ -1,7 +1,7 @@
 ;;; settup org projects
-(require 'org)
-(require 'htmlize)
-(require 'ox-publish)
+;(require 'org)
+;(require 'htmlize)
+;(require 'ox-publish)
 (setq ;org-export-default-language "en"
       org-export-html-extension "html"
       org-export-with-timestamps t

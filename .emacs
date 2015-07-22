@@ -212,13 +212,16 @@
 	 smex persp-mode
          neotree
 	 multi-term multi-eshell yasnippet magit
-	 company irony ;company-irony ; irony for clang support
+	 company ;irony ;company-irony ; irony for clang support
 	 ;auto-complete auto-complete-clang-async
 	 virtualenvwrapper ;elpy auctex
 	 markdown-mode htmlize
          emacs-eclim
 	 ;geiser ;racket-mode
          emmet-mode ; for editing html/xml
+
+	 ; clojure[script] related.
+	 cider
 	 )
   "A list of packages to ensure are installed at launch.")
 
@@ -678,13 +681,14 @@ Optional argument ARG indicates that any cache should be flushed."
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; 14. virtualenvwrapper
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-(autoload 'virtualenvwrapper "virtualenvwrapper")
-(venv-initialize-interactive-shells) ;; if you want interactive shell support
-(venv-initialize-eshell) ;; if you want eshell support
-(setq venv-location '("~/localenv"))
+; currently, I have no use of python.
+;; (autoload 'virtualenvwrapper "virtualenvwrapper")
+;; (venv-initialize-interactive-shells) ;; if you want interactive shell support
+;; (venv-initialize-eshell) ;; if you want eshell support
+;; (setq venv-location '("~/localenv"))
 
-(add-hook 'python-mode-hook (lambda ()
-                              (venv-workon "localenv")))
+;; (add-hook 'python-mode-hook (lambda ()
+;;                               (venv-workon "localenv")))
 
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; 15. elpy
@@ -733,9 +737,6 @@ Optional argument ARG indicates that any cache should be flushed."
 ; 17. irony -- libclang support
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;;; irony support
-(add-hook 'c++-mode-hook 'irony-mode)
-(add-hook 'c-mode-hook 'irony-mode)
-(add-hook 'objc-mode-hook 'irony-mode)
 
 ;; replace the `completion-at-point' and `complete-symbol' bindings in
 ;; irony-mode's buffers by irony-mode's function
@@ -744,8 +745,14 @@ Optional argument ARG indicates that any cache should be flushed."
     'irony-completion-at-point-async)
   (define-key irony-mode-map [remap complete-symbol]
     'irony-completion-at-point-async))
-(add-hook 'irony-mode-hook 'my-irony-mode-hook)
-(add-hook 'irony-mode-hook 'company-irony-setup-begin-commands)
+
+(when (package-installed-p 'irony)
+  (add-hook 'c++-mode-hook 'irony-mode)
+  (add-hook 'c-mode-hook 'irony-mode)
+  (add-hook 'objc-mode-hook 'irony-mode)
+
+  (add-hook 'irony-mode-hook 'my-irony-mode-hook)
+  (add-hook 'irony-mode-hook 'company-irony-setup-begin-commands))
 
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; 18. emacs-clang-complete-async
@@ -863,9 +870,8 @@ Optional argument ARG indicates that any cache should be flushed."
 (setq org-directory "~/org")
 
 ;;; load org wiki settings (not loading this if on windows)
-(if (not (eq system-type 'windows-nt))
-    (require 'org-projects)
-    )
+(when (not (eq system-type 'windows-nt))
+  (add-hook 'after-init-hook (lambda() (require 'org-projects))))
 
 (with-eval-after-load "org"
   ;;; evil-org-mode
@@ -988,87 +994,11 @@ Optional argument ARG indicates that any cache should be flushed."
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; 2. Change the looking of modeline
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-;;; Helper function
-(defun evil-generate-mode-line-tag (&optional state)
-  "Generate the evil mode-line tag for STATE."
-  (let ((tag (evil-state-property state :tag t)))
-    ;; prepare mode-line: add tooltip
-    (if (stringp tag)
-        (propertize tag
-		    'face 'font-lock-preprocessor-face
-                    'help-echo (evil-state-property state :name)
-                    'mouse-face 'mode-line-highlight)
-      tag)))
-;; set tags for evil state to fit this new modline
-(set (evil-state-property 'normal :tag) "N")
-(set (evil-state-property 'insert :tag) "I")
-(set (evil-state-property 'visual :tag) "V")
-(set (evil-state-property 'operator :tag) "O")
-(set (evil-state-property 'replace :tag) "R")
-(set (evil-state-property 'motion :tag) "M")
-(set (evil-state-property 'emacs :tag) "E")
-
-;; (setq-default mode-line-format
-;;   (list
-
-;;     ;; the buffer name; the file name as a tool tip
-;;     '(:eval (propertize "%b " 'face 'font-lock-keyword-face
-;;         'help-echo (buffer-file-name)))
-
-;;     ;; was this buffer modified since the last save?
-;;     '(:eval (if (buffer-modified-p)
-;; 	      "[+] "
-;; 	      ""))
-
-;;     ;; line and column
-;;     "<" ;; '%02' to set to 2 chars at least; prevents flickering
-;;       (propertize "%02l" 'face 'font-lock-type-face) ","
-;;       (propertize "%02c" 'face 'font-lock-type-face)
-;;     "> "
-
-;;     "[" ;; Display mode of evil
-;;     '(:eval (evil-generate-mode-line-tag evil-state))
-
-;;     ;; is this buffer read-only?
-;;     '(:eval (if buffer-read-only
-;;               (propertize "R"
-;;                              'face 'font-lock-type-face
-;;                              'help-echo "Buffer is read-only")
-;; 	      "-"))
-;;     "] "
-
-;;     ;; the current major mode for the buffer.
-;;     "["
-
-;;     '(:eval (propertize "%m" 'face 'font-lock-string-face
-;;               'help-echo buffer-file-coding-system))
-;;     "] "
-
-;;     ;; relative position, size of file
-;;     "["
-;;     (propertize "%p" 'face 'font-lock-constant-face) ;; % above top
-;;     "/"
-;;     (propertize "%I" 'face 'font-lock-constant-face) ;; size
-;;     "] "
-
-;;     ;; ;; elscreen modeline
-;;     ;; '(:eval elscreen-e21-mode-line-string)
-;;     ;; perspective modline
-;;     ;; '(:eval persp-modestring)
-;;     '(:eval persp-lighter)
-
-;;     ;; add the time, with the date and the emacs uptime in the tooltip
-;;     '(:eval (propertize (format-time-string " %H:%M")
-;;               'help-echo
-;;               (concat (format-time-string "%c; ")
-;;                       (emacs-uptime "Uptime:%hh"))))
-;;     " --"
-;;     ;; i don't want to see minor-modes; but if you want, uncomment this:
-;;     ;; minor-mode-alist  ;; list of minor modes
-;;     "%-" ;; fill with '-'
-;;     ))
-;; (force-mode-line-update t)
+;;; use powerline now, and customized theme for vim.
+(when (package-installed-p 'powerline)
+  (require 'powerline)
+  (require 'powerline-evil-themes)
+  (powerline-evil-theme))
 
 ;============================================================
 ; Settings by Emacs Groups

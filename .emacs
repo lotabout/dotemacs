@@ -5,8 +5,11 @@
 
 ; disable menu bar
 (menu-bar-mode -1)
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
+
+(when window-system
+  (tool-bar-mode -1)
+  (scroll-bar-mode -1))
+
 
 ; Show line number
 ;(setq linum-format "%4d\u2502")
@@ -88,19 +91,19 @@
 ;;               (when (and buffer (buffer-file-name buffer))
 ;;                 (kill-buffer buffer)))))
 
-(require 'ido)
-(setq ido-enable-flex-matching t)
-(setq ido-everywhere t)
-(ido-mode t)
+;(require 'ido)
+;(setq ido-enable-flex-matching t)
+;(setq ido-everywhere t)
+;(ido-mode t)
 
 ;;; indent with spaces instead of tabs
 ;; Exceptions: Makefile and ChangeLog modes.
-;; (add-hook 'find-file-hook '(lambda ()
-;;   (if (and buffer-file-name
-;;            (not (string-equal mode-name "Change Log"))
-;;            (not (string-equal mode-name "Makefile"))
-;;            (not (string-equal mode-name "GNUmakefile")))
-;;       (setq indent-tabs-mode nil))))
+(add-hook 'find-file-hook '(lambda ()
+  (if (and buffer-file-name
+           (not (string-equal mode-name "Change Log"))
+           (not (string-equal mode-name "Makefile"))
+           (not (string-equal mode-name "GNUmakefile")))
+      (setq indent-tabs-mode nil))))
 
 ;;; Utilities
 (unless (fboundp 'with-eval-after-load)
@@ -177,7 +180,6 @@
   (setq package-archives '(("marmalade" . "http://marmalade-repo.org/packages/")
                            ("gnu" . "http://elpa.gnu.org/packages/")
                            ("melpa" . "http://melpa.org/packages/")
-			   ;("elpy" . "http://jorgenschaefer.github.io/packages/")
 			   ))
   (package-initialize))
 
@@ -206,15 +208,18 @@
 
 (defvar prelude-packages
   '(evil evil-leader evil-nerd-commenter evil-matchit
-	 evil-visualstar evil-surround ace-jump-mode paredit evil-paredit
+	 evil-visualstar evil-surround ace-jump-mode
 	 evil-numbers evil-search-highlight-persist
+	 paredit evil-paredit
 	 org evil-org
-	 smex persp-mode
-         neotree
+	 helm helm-projectile
+	 exec-path-from-shell
+	 ;smex persp-mode
+         neotree expand-region evil-iedit-state
 	 multi-term multi-eshell yasnippet magit
 	 company ;irony ;company-irony ; irony for clang support
 	 ;auto-complete auto-complete-clang-async
-	 virtualenvwrapper ;elpy auctex
+	 ;virtualenvwrapper ;elpy auctex
 	 markdown-mode htmlize
          emacs-eclim
 	 ;geiser ;racket-mode
@@ -392,21 +397,21 @@
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; From Emacs Wiki
 ; have smex call 'smex-initialize' when it's needed.
-(global-set-key [(meta x)]
-		(lambda ()
-		  (interactive)
-		  (or (boundp 'smex-cache)
-		      (smex-initialize))
-		  (global-set-key [(meta x)] 'smex)
-		  (smex)))
+;; (global-set-key [(meta x)]
+;; 		(lambda ()
+;; 		  (interactive)
+;; 		  (or (boundp 'smex-cache)
+;; 		      (smex-initialize))
+;; 		  (global-set-key [(meta x)] 'smex)
+;; 		  (smex)))
 
-(global-set-key [(shift meta x)]
-		(lambda ()
-		  (interactive)
-		  (or (boundp 'smex-cache)
-		      (smex-initialize))
-		  (global-set-key [(shift meta x)] 'smex-major-mode-commands)
-		  (smex-major-mode-commands)))
+;; (global-set-key [(shift meta x)]
+;; 		(lambda ()
+;; 		  (interactive)
+;; 		  (or (boundp 'smex-cache)
+;; 		      (smex-initialize))
+;; 		  (global-set-key [(shift meta x)] 'smex-major-mode-commands)
+;; 		  (smex-major-mode-commands)))
 
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; 8. persp-mode/ perspective
@@ -480,6 +485,12 @@ Optional argument ARG indicates that any cache should be flushed."
 
 (evil-leader/set-key "ne" 'neotree-toggle)
 (global-set-key (kbd "<f8>") 'neotree-toggle)
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; exec-path-from-shell: fix shell path on MAC
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+(when (memq window-system '(mac ns))
+  (exec-path-from-shell-initialize))
 
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; 8. multi-eshell
@@ -802,6 +813,39 @@ Optional argument ARG indicates that any cache should be flushed."
   (add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
   )
 
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; 22. helm
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+(require 'helm-config)
+
+(when (package-installed-p 'helm)
+  ;; change default prefix key
+  (global-set-key (kbd "C-c h") 'helm-command-prefix)
+  (global-unset-key (kbd "C-x c"))
+
+  ;; helm-M-x
+  (setq helm-M-x-fuzzy-match t)
+  (global-set-key (kbd "M-x") 'helm-M-x)
+
+  ;; helm-kill-ring
+  (global-set-key (kbd "M-y") 'helm-show-kill-ring)
+
+  ;; helm-mini
+  (global-set-key (kbd "C-x b") 'helm-mini)
+  (setq helm-buffers-fuzzy-matching t
+	helm-recentf-fuzzy-match t)
+
+  ;; helm-find-files
+  (global-set-key (kbd "C-x C-f") 'helm-find-files)
+  )
+
+;;; -----------------------------
+;;; helm-projectile
+(when (package-installed-p 'helm-projectile)
+  (projectile-global-mode)
+  (helm-projectile-on)
+  )
+
 ;============================================================
 ; Filetype specified configuration
 ;============================================================
@@ -1020,6 +1064,7 @@ Optional argument ARG indicates that any cache should be flushed."
  '(fci-rule-color "#383838")
  '(global-eclim-mode t)
  '(inhibit-startup-screen t)
+ '(ns-command-modifier (quote meta) t)
  '(persp-auto-resume-time 0)
  '(persp-auto-save-opt 0)
  '(persp-nil-name "main")

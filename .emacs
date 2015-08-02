@@ -1045,6 +1045,26 @@ Optional argument ARG indicates that any cache should be flushed."
   (powerline-evil-theme))
 
 ;============================================================
+; Customizing functions and commands
+;============================================================
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; git-grep, use it on git repos will fasten the search
+; 'M-x git-grep' to invoke
+
+(defcustom git-grep-command "git --no-pager grep --no-color --line-number <C> <R>"
+  "The command to run with M-x git-grep.")
+
+(defun git-grep (regexp)
+  "Search for the given regexp using `git grep' in the current directory."
+  (interactive "sRegexp: ")
+  (unless (boundp 'grep-find-template) (grep-compute-defaults))
+  (let ((old-command grep-find-template))
+    (grep-apply-setting 'grep-find-template git-grep-command)
+    (rgrep regexp "*" "")
+    (grep-apply-setting 'grep-find-template old-command)))
+
+;============================================================
 ; Settings by Emacs Groups
 ;============================================================
 (custom-set-variables

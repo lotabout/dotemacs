@@ -615,6 +615,8 @@ Optional argument ARG indicates that any cache should be flushed."
      (define-key yas-keymap (kbd "<escape>") 'yas-escape)
      ;; (define-key yas-keymap (kbd "TAB") 'yas-next-field-or-maybe-expand)
      (define-key yas-keymap (kbd "TAB") nil)
+
+     (add-hook 'term-mode-hook (lambda () (yas-minor-mode -1)))
      ))
 
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

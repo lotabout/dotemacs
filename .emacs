@@ -210,6 +210,7 @@
   '(evil evil-leader evil-nerd-commenter evil-matchit
 	 evil-visualstar evil-surround ace-jump-mode
 	 evil-numbers evil-search-highlight-persist
+         ace-window
 	 paredit evil-paredit
 	 org evil-org
 	 helm helm-projectile
@@ -870,6 +871,12 @@ Optional argument ARG indicates that any cache should be flushed."
 
 (when (package-installed-p 'tern)
   (setup-tern))
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; ace-window choose window like ace-jump
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+(when (package-installed-p 'ace-window)
+  (global-set-key (kbd "C-x o") 'ace-window))
 
 ;============================================================
 ; Filetype specified configuration

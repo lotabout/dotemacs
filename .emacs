@@ -219,6 +219,7 @@
          neotree expand-region evil-iedit-state
 	 multi-term multi-eshell yasnippet magit
 	 company ;irony ;company-irony ; irony for clang support
+	 ; tern company-tern 
 	 ;auto-complete auto-complete-clang-async
 	 ;virtualenvwrapper ;elpy auctex
 	 markdown-mode htmlize
@@ -480,6 +481,7 @@ Optional argument ARG indicates that any cache should be flushed."
             (define-key evil-normal-state-local-map (kbd "D") 'neotree-delete-node)
             (define-key evil-normal-state-local-map (kbd "r") 'neotree-refresh)
             (define-key evil-normal-state-local-map (kbd "C") 'neotree-change-root)
+            (define-key evil-normal-state-local-map (kbd "c") 'neotree-create-node)
             (define-key evil-normal-state-local-map (kbd "U") 'neotree-change-root)
 	    (define-key evil-normal-state-local-map (kbd "A") 'neotree-stretch-toggle)
             (define-key evil-normal-state-local-map (kbd "O") 'neotree-open-directory-recursively)))
@@ -826,9 +828,7 @@ Optional argument ARG indicates that any cache should be flushed."
   (global-set-key (kbd "C-c h") 'helm-command-prefix)
   (global-unset-key (kbd "C-x c"))
 
-  (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to do persistent action
-  (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB works in terminal
-  (define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
+  
 
   ;; helm-M-x
   (setq helm-M-x-fuzzy-match t)
@@ -844,14 +844,29 @@ Optional argument ARG indicates that any cache should be flushed."
 
   ;; helm-find-files
   (global-set-key (kbd "C-x C-f") 'helm-find-files)
-  )
+
+  (with-eval-after-load "helm"
+    (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to do persistent action
+    (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB works in terminal
+    (define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
+    ))
 
 ;;; -----------------------------
 ;;; helm-projectile
+(setq projectile-enable-caching t)
 (when (package-installed-p 'helm-projectile)
   (projectile-global-mode)
   (helm-projectile-on)
   )
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; 21. tern-mode
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+(defun setup-tern ()
+  (add-hook 'js-mode-hook '(lambda () (tern-mode 1))))
+
+(when (package-installed-p 'tern)
+  (setup-tern))
 
 ;============================================================
 ; Filetype specified configuration
@@ -913,7 +928,10 @@ Optional argument ARG indicates that any cache should be flushed."
   (global-eclim-mode)
   (require 'company-emacs-eclim)
   (add-hook 'java-mode-hook
-            'company-emacs-eclim-local))
+            'company-emacs-eclim-local)
+  (custom-set-variables
+   '(eclim-eclipse-dirs '("~/localenv/opt/eclipse"))
+   '(eclim-executable "~/localenv/opt/eclipse/eclim")))
 
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; 4. org mode
@@ -1084,9 +1102,6 @@ Optional argument ARG indicates that any cache should be flushed."
     (company-bbdb company-nxml company-css company-eclim company-semantic company-clang company-xcode company-ropemacs company-cmake company-capf
 		  (company-dabbrev-code company-gtags company-etags company-keywords)
 		  company-oddmuse company-files)))
- '(eclim-eclipse-dirs
-   (quote
-    ("/Applications/eclipse" "/usr/lib/eclipse" "/usr/local/lib/eclipse" "/usr/share/eclipse" "/opt/eclipse-java")))
  '(evil-toggle-key "C-`")
  '(fci-rule-color "#383838")
  '(global-eclim-mode t)

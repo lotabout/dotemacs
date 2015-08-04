@@ -1,50 +1,32 @@
-;;; region replace macro
-(defmacro region-replace-routine (regex literal start end)
-  `(let ((end (or ,end (and (use-region-p) (region-end)) (point-max)))
-         (start (or ,start (and (use-region-p) (region-beginning)) (point-min))))
-     (goto-char start)
-     (while (re-search-forward ,regex end t)
-       (replace-match ,literal nil nil))))
+;;; required libraries
+(require 's)
 
-(defun region-replace (regex literal &optional start end)
-  "Replace regex to literal in a region if start/end are not specified."
-  (interactive)
-  (save-excursion
-    (barf-if-buffer-read-only)
-    (region-replace-routine regex literal start end)))
+;;; ===========================================================================
+;;; nikola utility function
+(defun nikola-set-entry (entry-pair)
+  (concat ".. " (car entry-pair) ": " (cdr entry-pair)))
 
-(defun swaps (left right &optional start end)
-  "Swaps left to right."
-  (interactive "sChange this: 
-sTo this: " )
-  (save-excursion
-    (barf-if-buffer-read-only)
-    (let ((left (regexp-quote left))
-          (right (regexp-quote right))
-          (case-replace nil)            ; re-consider if this is needed.
-          (case-fold-search nil))
-      (region-replace-routine (format "\\\(%s\\\)\\|\\\(%s\\\)" left right)
-                              (if (match-string 1) right left)
-                              start
-                              end))))
+(defun nikola-wrap (&rest rest)
+  (concat "#+BEGIN_COMMENT\n"
+	  (mapconcat 'identity rest "\n")
+	  "\n#+END_COMMENT\n"))
 
-;;; Helper function for defining key bindings.
-(defmacro define-key-with-fallback (keymap key def condition &optional mode)
-  "Define key with fallback. Binds KEY to definition DEF in keymap KEYMAP, 
-   the binding is active when the CONDITION is true. Otherwise turns MODE off 
-   and re-enables previous definition for KEY. If MODE is nil, tries to recover 
-   it by stripping off \"-map\" from KEYMAP name."
-  `(define-key ,keymap ,key
-     (lambda () (interactive)
-       (if ,condition ,def
-	 (let* ((,(if mode mode
-		    (let* ((keymap-str (symbol-name keymap))
-			   (mode-name-end (- (string-width keymap-str) 4)))
-		      (if (string= "-map" (substring keymap-str mode-name-end))
-			  (intern (substring keymap-str 0 mode-name-end))
-			(error "Could not deduce mode name from keymap name (\"-map\" missing?)")))) 
-		 nil)
-		(original-func (key-binding ,key)))
-	   (call-interactively original-func))))))
+(defun nikola-set-properties (title slug tags category link description)
+  (interactive "sTitle: \nsSlug: \nsTags(comma seperated): \nsCategory: \nsLink: \nsDescription: ")
+  (let ((meta
+	 (nikola-wrap
+	  (nikola-set-entry (cons "title" title))
+	  (nikola-set-entry (cons "slug" slug))
+	  (nikola-set-entry (cons "date" (format-time-string "%Y-%m-%d %T UTC%z" (current-time))))
+	  (nikola-set-entry (cons "tags" (mapconcat (lambda (tag) (s-trim tag))
+						    (s-split "," tags)
+						    ", ")))
+	  (nikola-set-entry (cons "category" category))
+	  (nikola-set-entry (cons "link" link))
+	  (nikola-set-entry (cons "description" description))
+          (nikola-set-entry (cons "type" "text")))))
+    (save-excursion
+      (goto-char (point-min))
+      (insert meta))))
 
 (provide 'utility-functions)

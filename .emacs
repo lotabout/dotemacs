@@ -30,7 +30,7 @@
 (add-hook 'find-file-hook
 	  (lambda ()
 	    (hl-line-mode 1)
-	    (set-face-background 'hl-line "gray25")))
+	    (set-face-background 'hl-line "gray30")))
 
 ; Show matched parents
 (show-paren-mode t)
@@ -111,7 +111,7 @@
     (declare (indent 1) (debug t))
     `(eval-after-load ,file '(progn ,@body))))
 
-(require 'utility-functions)
+(require 'helper-functions)
 ;--------------------------------------------------
 ; Global key bindings
 ;--------------------------------------------------
@@ -250,6 +250,9 @@
       (package-install p))))
 
 ;(global-nlinum-mode)
+
+;;; load customized utilities
+(require 'utility-functions)
 
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; 1. evil -- emulation of vim

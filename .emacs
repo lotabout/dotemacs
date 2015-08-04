@@ -214,7 +214,8 @@
 	 org evil-org
 	 helm helm-projectile
 	 exec-path-from-shell
-	 ;smex persp-mode
+         ;smex
+         persp-mode
          neotree expand-region evil-iedit-state
 	 multi-term multi-eshell yasnippet magit
 	 company ;irony ;company-irony ; irony for clang support
@@ -440,10 +441,10 @@
      ))
 
 ;;; ibuffer support
-(defalias 'list-buffers
-  '(lambda (arg)
-     (interactive "P")
-     (with-persp-buffer-list () (ibuffer))))
+;; (defalias 'list-buffers
+;;   '(lambda (arg)
+;;      (interactive "P")
+;;      (with-persp-buffer-list () (ibuffer))))
 
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; Neo Tree -- NERD-tree for emacs
@@ -824,6 +825,10 @@ Optional argument ARG indicates that any cache should be flushed."
   ;; change default prefix key
   (global-set-key (kbd "C-c h") 'helm-command-prefix)
   (global-unset-key (kbd "C-x c"))
+
+  (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to do persistent action
+  (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB works in terminal
+  (define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
 
   ;; helm-M-x
   (setq helm-M-x-fuzzy-match t)
